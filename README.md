@@ -24,11 +24,33 @@ pipenv run python app.py
 ```
 
 - 필수 환경변수
+`.env.example` 파일을 참조하여 아래와 같이 `.env` 파일을 생성합니다.
+
 ```bash
+USERID # 코레일 아이디
+USERPW # 코레일 비밀번호
 BOTTOKEN # 텔레그램 봇 토큰
 ```
 
+## 실행
+
+### 로컬 설치 및 실행(macOS)
+
+실행 후의 endpoint는 `localhost:8080/telebot`입니다.
+
+```bash
+make mac-setup
+```
+
+### Docker 컨테이너 빌드 및 실행
+
+```bash
+make build
+make run-docker
+```
+
 ## 관리자편의 로그인 기능 사용하고 싶은 경우
+
 ```bash
 docker run -dit -e USERID=[본인코레인ID] -e USERPW=[본인코레일PW] -p [외부에 노출시킬 포트]:8080 [빌드한 이미지명]
 ```
