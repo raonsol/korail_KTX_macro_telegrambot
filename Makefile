@@ -31,5 +31,7 @@ run-docker:	## Run Docker container
 		-e USERID=${USERID} \
 		-e USERPW=${USERPW} \
 		-e BOTTOKEN=${BOTTOKEN} \
-		-p 8080:8080 \
+		-e ALLOW_LIST=${ALLOW_LIST} \
+		-e ADMINPW=${ADMINPW} \
+		-p 8391:8080 \
 		${IMAGE_NAME}

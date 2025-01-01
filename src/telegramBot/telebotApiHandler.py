@@ -7,6 +7,7 @@ import requests
 import os
 import subprocess
 import signal
+import json
 
 class Index(Resource):
     
@@ -114,13 +115,13 @@ class Index(Resource):
         return inProgress, progressNum
     
     def post(self):
-        # print (json.dumps(request.json, sort_keys=True, indent=4))
+        print(json.dumps(request.json, sort_keys=True, indent=4))
         if ("edited_message" in request.json):
             pass
-            return make_response("OK")
+            return make_response("Edited message")
         if ("my_chat_member" in request.json):
             pass
-            return make_response("OK")
+            return make_response("Chat member")
         try:
             initFlag = False
             getText = request.json['message']['text'].strip()
@@ -135,7 +136,7 @@ class Index(Resource):
         
         if (getText == "/cancel"):
             self.cancelFunc(chatId)
-            return make_response("OK")
+            return make_response("Canceled")
         
         if (getText == "/subscribe"):
             self.subscribe(chatId)
@@ -151,7 +152,7 @@ class Index(Resource):
             self.returnHelp(chatId)
         elif (progressNum == 12):
             self.alreadyDoing(chatId)
-            return make_response("OK")
+            return make_response("already doing")
         elif (getText == "/start"):
             self.startFunc(chatId)
         elif (getText[0] == "/"):
@@ -166,7 +167,7 @@ class Index(Resource):
                 else :
                     msg = "[진행중인 예약프로세스가 없습니다]\n/start 를 입력하여 작업을 시작하세요.\n"
                     self.sendMessage(chatId, msg)
-        return make_response("OK")
+        return make_response("Success")
     
     
     ##사용자에게 메시지 보내기
@@ -177,11 +178,12 @@ class Index(Resource):
             "text" : getText
         }
         self.s.get(sendUrl, params=params)
+        print("Send message to {} : {}".format(chatId, getText))
         return None
     
     def startFunc(self, chatId):
         msg = """
-근삼 코레일 봇을 이용해 주셔사 감사합니다.
+코레일 봇을 이용해 주셔서 감사합니다.
 본 프로그램은 매진 열차 자동 예약을 위해 제작된 프로그램으로, 결제 직전의 단계인 "예약" 까지만 진행해 주며, 이후 결제는 예약이 완료된 이후 20분 내로 사용자가 직접 해주셔야 합니다.
 
 예매 프로그램을 시작하기 위해 정보를 입력받겠습니다.
@@ -191,10 +193,10 @@ class Index(Resource):
   2. 출발 희망일 입력
   3. 출발 역 입력
   4. 도착 역 입력
-  *. 관리자로 바로 로그인 : 근삼이최고
 ================
 
 예매 프로세스를 계속 진행하시려면 "예" 또는 "Y"를 입력해주세요.
+* 관리자로 바로 로그인하려면 비밀번호를 입력하세요
             """
         self.userDict[chatId]["inProgress"] = True
         self.userDict[chatId]["lastAction"] = 1
@@ -207,14 +209,11 @@ class Index(Resource):
             msg = """
 예매 진행을 계속합니다.
 예매 진행중, 취소를 원하시면 /cancel 을 입력해주세요.
-코레일 로그인의 위해 정보입력을 시작합니다.
-
-(현재는 휴대폰 번호 로그인 기능만을 지원하며, 추가 기능은 이후 추가할 예정입니다.)
 
 코레일 로그인시 사용하는 휴대전화번호를 입력해 주세요.
 [ex_ 010-7537-2437] "-" 를 반드시 포함하여 입력바랍니다.
 """
-        elif (str(data) == "근삼이최고"):
+        elif (str(data) == os.environ.get("ADMINPW")):
             username = os.environ.get("USERID")
             password = os.environ.get("USERPW")
             if (username and password):
@@ -244,18 +243,13 @@ class Index(Resource):
     
     #아이디 입력 함수
     def inputId(self, chatId, data):
-        allowList = os.environ.get('ALLOW_LIST', '')
+        allowList = os.environ.get('ALLOW_LIST', '').split(",")
         if ("-" not in data):
             msg = "'-'를 포함한 전화번호를 입력해주세요. 다시 입력 바랍니다."
         elif (data not in allowList):
-            msgToSubscribers = f"{data}가 구독자 목록에 없어서 실행에 실패했음."
+            msgToSubscribers = f"{data}는 등록되지 않은 사용자입니다."
             self.sendToSubscribers(msgToSubscribers)
             self.manageProgress(chatId, 0)
-            msg = """
-2024년 부터 본 서비스가 유료화 되었습니다. 
-구독을 희망하시면 텔레그램 @dubidum 으로 문의주세요.
-예매 진행을 취소합니다.
-"""
         else:
             self.userDict[chatId]["userInfo"]["korailId"] = data
             self.userDict[chatId]["lastAction"] = 3
@@ -567,7 +561,7 @@ class Index(Resource):
         paramList = set(["chatId", "msg", "status"])
         getParams = set(dict(request.args).keys())
         if (getParams & paramList != paramList):
-            return make_response("OK")
+            return make_response("Parameter error")
         else:
             chatId = request.args.get('chatId')
             msg = request.args.get('msg')
@@ -582,7 +576,7 @@ class Index(Resource):
             del self.runningStatus[chatId]
             msgToSubscribers = f'{self.userDict[chatId]["userInfo"]["korailId"]}의 예약이 종료되었습니다.'
             self.sendToSubscribers(msgToSubscribers)
-        return make_response("OK")
+        return make_response("get finished")
         
     def subscribe(self, chatId):
         if (chatId not in self.subscribes):

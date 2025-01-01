@@ -32,6 +32,14 @@ USERPW # 코레일 비밀번호
 BOTTOKEN # 텔레그램 봇 토큰
 ```
 
+### 텔레그램 설정
+
+1. 텔레그램 봇을 생성하고 API 토큰을 발급받은 후, `.env` 파일에 `BOTTOKEN` 환경변수로 설정합니다.
+2. 다음 API를 통해 webhook을 설정합니다. 서버 endpoint는 https로 설정되어야 하며, 80, 88, 443, 8443 포트만 허용됩니다.
+```bash
+curl -F "url=[서버 endpoint]" "https://api.telegram.org/bot[BOTTOKEN 키]/setWebhook"
+```
+
 ## 실행
 
 ### 로컬 설치 및 실행(macOS)
